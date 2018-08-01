@@ -23,21 +23,24 @@ app.get('/requests', authenticate, async (req, res) => {
   }
 });
 
-// app.get('/request/:id', async (req, res) => {
-//   const id = req.params.id;
-//   if (!ObjectId.isValid(id)) {
-//     return res.status(404).send();
-//   }
-//   try {
-//     const request = await Request.find({ _id: id, _owner: req.user._id });
-//     if (!request) {
-//       return res.status(404).send();
-//     }
-//     res.status(200).send({ request });
-//   } catch (error) {
-//     res.status(400).send();
-//   }
-// });
+app.delete('/request/:id', async (req, res) => {
+  const id = req.params.id;
+  if (!ObjectId.isValid(id)) {
+    return res.status(404).send();
+  }
+  try {
+    const request = await Request.findOneAndRemove({
+      _id: id,
+      _owner: req.user._id
+    });
+    if (!request) {
+      return res.status(404).send();
+    }
+    res.status(200).send({ request });
+  } catch (error) {
+    res.status(400).send();
+  }
+});
 
 app.post('/request', authenticate, async (req, res) => {
   const request = new Request({
