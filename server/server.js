@@ -3,7 +3,6 @@ const bodyParser = require('body-parser');
 const https = require('https');
 const _ = require('lodash');
 const { ObjectId } = require('mongodb');
-var Cookies = require('cookies');
 
 require('./db/mongoose');
 const { Request } = require('./models/request.model');
@@ -43,20 +42,33 @@ app.get('/requests', authenticate, async (req, res) => {
 app.post('/request', authenticate, async (req, res) => {
   const request = new Request({
     url: req.body.url,
-    type: req.body.type,
-    _owner: req.user._id,
-    date: new Date() /*  DEFINED AS DEFAULT CHECK IT LATER IF IT WORKS LIKE THAT */
+    _owner: req.user._id
+    // method: req.body.method,
+    // headers: req.body.headers,
+    // body: req.body.body,
+    // date: new Date() /*  DEFINED AS DEFAULT CHECK IT LATER IF IT WORKS LIKE THAT */
   });
   try {
     await request.save();
+
     https.get(request.url, response => {
-      const headers = response.headers;
+      const startTime = new Date().getTime();
       let body = '';
       response.on('data', chunk => {
         body += chunk;
       });
       response.on('end', () => {
-        res.status(200).send({ body, headers });
+        const headers = response.headers;
+        headers['content-length'] = body.length;
+        const info = {
+          status: response.statusCode,
+          responseTime: new Date().getTime() - startTime,
+          sizeKB: (headers['content-length'] / 1024).toFixed(2),
+          headers,
+          body
+        };
+        const req = _.pick(request, ['url', 'date', '_id']);
+        res.status(200).send({ req, info });
       });
     });
   } catch (error) {
@@ -81,13 +93,23 @@ app.post('/users', async (req, res) => {
 
 app.post('/users/login', async (req, res) => {
   try {
-    const user = new User(_.pick(req.body, ['email', 'password']));
-    await User.findbyCredentials(user.email, user.password);
+    const body = new User(_.pick(req.body, ['email', 'password']));
+    const user = await User.findByCredentials(body.email, body.password);
     const token = await user.generateAuthToken();
     res
       .status(200)
       .header('x-auth', token)
       .send();
+  } catch (error) {
+    console.log(error);
+    res.status(400).send();
+  }
+});
+
+app.post('/users/logout', authenticate, async (req, res) => {
+  try {
+    await req.user.removeToken(req.token);
+    res.status(200).send();
   } catch (error) {
     res.status(400).send();
   }

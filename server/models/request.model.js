@@ -11,10 +11,17 @@ const Request = mongoose.model('Request', {
     type: Date,
     default: new Date()
   },
-  type: {
+  method: {
     type: String,
-    required: true
+    default: 'GET'
   },
+  // body: {},
+  // headers: {
+  //   type: Object,
+  //   default: {
+  //     'content-type': 'application/json'
+  //   }
+  // },
   _owner: {
     type: mongoose.Schema.Types.ObjectId,
     required: true
