@@ -7,6 +7,7 @@ const { ObjectId } = require('mongodb');
 require('./db/mongoose');
 const { Request } = require('./models/request.model');
 const { User } = require('./models/user.model');
+const { Collection } = require('./models/collection.model');
 const { authenticate } = require('./middleware/authenticate.middleware');
 
 const app = express();
@@ -17,7 +18,7 @@ app.use(bodyParser.json());
 app.get('/requests', authenticate, async (req, res) => {
   const requests = await Request.find({ _owner: req.user._id });
   try {
-    res.status(200).send({ requests });
+    res.status(200).send(requests);
   } catch (error) {
     res.status(400).send();
   }
@@ -45,15 +46,13 @@ app.delete('/request/:id', async (req, res) => {
 app.post('/request', authenticate, async (req, res) => {
   const request = new Request({
     url: req.body.url,
-    _owner: req.user._id
-    // method: req.body.method,
+    _owner: req.user._id,
+    method: req.body.method ? req.body.method : 'GET'
     // headers: req.body.headers,
     // body: req.body.body,
-    // date: new Date() /*  DEFINED AS DEFAULT CHECK IT LATER IF IT WORKS LIKE THAT */
   });
   try {
     await request.save();
-
     https.get(request.url, response => {
       const startTime = new Date().getTime();
       let body = '';
@@ -70,12 +69,82 @@ app.post('/request', authenticate, async (req, res) => {
           headers,
           body
         };
-        const req = _.pick(request, ['url', 'date', '_id']);
+        const req = _.pick(request, ['url', 'method', 'date', '_id']);
         res.status(200).send({ req, info });
       });
     });
   } catch (error) {
     console.log(error);
+    res.status(400).send();
+  }
+});
+
+// app.post('/requests', authenticate, (req, res) => {
+//   const requests = req.body;
+//   requests.forEach(request => {
+//     try {
+//       newRequest = new Request(_.pick(request, ['url', 'method']));
+//       newRequest._owner = req.user._id;
+//       console.log('oi');
+//       newRequest.save();
+//     } catch (error) {
+//       return res.status(400).send();
+//     }
+//   });
+//   const saveCount = requests.length;
+//   res.status(200).send({ saveCount });
+// });
+
+app.get('/collections', authenticate, async (req, res) => {
+  const collections = await Collection.find({ _owner: req.user._id });
+  try {
+    res.status(200).send(collections);
+  } catch (error) {
+    res.status(400).send();
+  }
+});
+
+app.post('/collection', authenticate, async (req, res) => {
+  const collection = new Collection({
+    url: req.body.url,
+    _owner: req.user._id,
+    date: req.body.date,
+    method: req.body.method
+    // headers: req.body.headers,
+    // body: req.body.body,
+  });
+  try {
+    await collection.save();
+    res.status(200).send();
+  } catch (error) {
+    console.log(error);
+    res.status(400).send();
+  }
+});
+
+// app.post('/collections', authenticate, async (req, res) => {
+//   const collections = req.body;
+//   collections.forEach(collection => {
+//     newCollection = new Collection(_.pick(collection, ['url', 'method', '_owner' ]));
+//   });
+//  ...
+// });
+
+app.delete('/collection/:id', authenticate, async (req, res) => {
+  const id = req.params.id;
+  if (!ObjectId.isValid(id)) {
+    return res.status(404).send();
+  }
+  try {
+    const collection = Collection.findOneAndRemove({
+      _id: id,
+      _owner: req.user._id
+    });
+    if (!collection) {
+      return res.status(404).send();
+    }
+    res.status(200).send({ collection });
+  } catch (error) {
     res.status(400).send();
   }
 });
