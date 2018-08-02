@@ -131,7 +131,6 @@ app.post('/collection', authenticate, async (req, res) => {
     await collection.save();
     res.status(200).send();
   } catch (error) {
-    console.log(error);
     res.status(400).send();
   }
 });
@@ -150,7 +149,7 @@ app.delete('/collection/:id', authenticate, async (req, res) => {
     return res.status(404).send();
   }
   try {
-    const collection = Collection.findOneAndRemove({
+    const collection = await Collection.findOneAndRemove({
       _id: id,
       _owner: req.user._id
     });
