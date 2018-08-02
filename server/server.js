@@ -34,7 +34,7 @@ app.get('/requests', authenticate, async (req, res) => {
   }
 });
 
-app.delete('/request/:id', async (req, res) => {
+app.delete('/request/:id', authenticate, async (req, res) => {
   const id = req.params.id;
   if (!ObjectId.isValid(id)) {
     return res.status(404).send();
@@ -49,6 +49,7 @@ app.delete('/request/:id', async (req, res) => {
     }
     res.status(200).send({ request });
   } catch (error) {
+    console.log(error);
     res.status(400).send();
   }
 });
@@ -158,7 +159,10 @@ app.delete('/collection/:id', authenticate, async (req, res) => {
     }
     res.status(200).send({ collection });
   } catch (error) {
-    res.status(400).send();
+    {
+      console.log(error);
+      res.status(400).send();
+    }
   }
 });
 
