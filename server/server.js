@@ -62,9 +62,9 @@ app.post('/request', authenticate, async (req, res) => {
   });
   try {
     await request.save();
-    const req = _.pick(request, ['url', 'method', 'date', '_id']);
+    const responseReq = _.pick(request, ['url', 'method', 'date', '_id']);
     if (req.body.method !== 'GET') {
-      return res.status(200).send({ req });
+      return res.status(200).send({ req: responseReq });
     }
     https.get(request.url, response => {
       const startTime = new Date().getTime();
@@ -82,7 +82,7 @@ app.post('/request', authenticate, async (req, res) => {
           headers,
           body
         };
-        res.status(200).send({ req, info });
+        res.status(200).send({ req: responseReq, info });
       });
     });
   } catch (error) {
