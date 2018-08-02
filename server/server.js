@@ -129,7 +129,7 @@ app.post('/collection', authenticate, async (req, res) => {
   });
   try {
     await collection.save();
-    res.status(200).send();
+    res.status(200).send(collection);
   } catch (error) {
     res.status(400).send();
   }
