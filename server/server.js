@@ -64,7 +64,7 @@ app.post('/request', authenticate, async (req, res) => {
     await request.save();
     const req = _.pick(request, ['url', 'method', 'date', '_id']);
     if (req.body.method !== 'GET') {
-      res.status(200).send({ req });
+      return res.status(200).send({ req });
     }
     https.get(request.url, response => {
       const startTime = new Date().getTime();
