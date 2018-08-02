@@ -120,6 +120,7 @@ app.get('/collections', authenticate, async (req, res) => {
 
 app.post('/collection', authenticate, async (req, res) => {
   const collection = new Collection({
+    _refReq: req.body._id,
     url: req.body.url,
     _owner: req.user._id,
     date: req.body.date,
@@ -150,7 +151,7 @@ app.delete('/collection/:id', authenticate, async (req, res) => {
   }
   try {
     const collection = await Collection.findOneAndRemove({
-      _id: id,
+      _refReq: id,
       _owner: req.user._id
     });
     if (!collection) {

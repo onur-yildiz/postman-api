@@ -15,6 +15,10 @@ const Collection = mongoose.model('Collection', {
     type: String,
     default: 'GET'
   },
+  _refReq: {
+    required: true,
+    type: mongoose.Schema.Types.ObjectId
+  },
   // body: {},
   // headers: {
   //   type: Object,
